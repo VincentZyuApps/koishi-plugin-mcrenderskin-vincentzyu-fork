@@ -1,12 +1,13 @@
 {
   "name": "koishi-plugin-mcrenderskin-vincentzyu-fork",
-  "description": "一个基于skinView3D.js的Minecraft玩家皮肤渲染的Koishi插件",
+  "description": "🎮 基于skinView3D.js 渲染Minecraft Java玩家的 皮肤和披风 3D图片 ✨",
   "version": "0.0.1",
   "main": "lib/index.js",
   "typings": "lib/index.d.ts",
   "files": [
     "lib",
-    "dist"
+    "dist",
+    "assets"
   ],
   "license": "MIT",
   "scripts": {},
