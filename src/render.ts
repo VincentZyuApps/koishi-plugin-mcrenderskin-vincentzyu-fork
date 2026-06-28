@@ -187,14 +187,14 @@ export async function readRendererAssets(config: {
   skinview3dBundlePath: string;
   fontPath: string;
   defaultWallPath: string;
-  debugLog?: boolean;
+  verboseConsoleLog?: boolean;
   ctx?: Context;
 }) {
-  debug(config.ctx, config.debugLog, '📦 读取 skinview3d bundle: %s', config.skinview3dBundlePath);
+  debug(config.ctx, config.verboseConsoleLog, '📦 读取 skinview3d bundle: %s', config.skinview3dBundlePath);
   const skinview3dBundleJs = readTextAsset(config.skinview3dBundlePath);
-  debug(config.ctx, config.debugLog, '🔤 读取 Minecraft 字体: %s', config.fontPath);
+  debug(config.ctx, config.verboseConsoleLog, '🔤 读取 Minecraft 字体: %s', config.fontPath);
   const fontDataUri = loadFontData(config.fontPath);
-  debug(config.ctx, config.debugLog, '🌄 读取默认背景图: %s', config.defaultWallPath);
+  debug(config.ctx, config.verboseConsoleLog, '🌄 读取默认背景图: %s', config.defaultWallPath);
   const defaultWallDataUri = loadWallpaper(config.defaultWallPath);
   return { skinview3dBundleJs, fontDataUri, defaultWallDataUri };
 }

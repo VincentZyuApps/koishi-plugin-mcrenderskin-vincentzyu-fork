@@ -77,7 +77,7 @@ export const usage = `
   <li>📐 <code>renderSize</code> 越高，画面越清晰，但渲染更慢、占用更多内存。</li>
   <li>🖼️ <code>wallPaper</code> 支持 <code>Default</code>、URL、Base64、路径。</li>
   <li>📦 <code>skinview3dBundlePath</code>、🔤 <code>fontPath</code>、🌄 <code>defaultWallPath</code> 都支持相对路径和绝对路径。</li>
-  <li>🔎 调试时建议打开 <code>debugLog</code>，便于查看资源读取和渲染阶段日志。</li>
+  <li>🔎 调试时建议打开 <code>verboseConsoleLog</code>，便于查看资源读取和渲染阶段日志。</li>
 </ul>
 
 <hr>
@@ -108,7 +108,7 @@ export const usage = `
 
 <h2>🧭 调试建议</h2>
 <ul>
-  <li>🔎 打开 <code>debugLog</code> 查看资源读取、Mojang 查询、皮肤/披风下载、Puppeteer 渲染等阶段日志。</li>
+  <li>🔎 打开 <code>verboseConsoleLog</code> 查看资源读取、Mojang 查询、皮肤/披风下载、Puppeteer 渲染等阶段日志。</li>
   <li>📁 检查资源路径是否正确，尤其是相对路径是否能从当前插件目录解析到目标文件。</li>
   <li>🌐 如果网络较差，优先排查 Mojang、OptiFine、MinecraftCapes 相关接口是否可访问。</li>
 </ul>

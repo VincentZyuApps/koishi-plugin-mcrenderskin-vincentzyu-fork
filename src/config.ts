@@ -66,7 +66,7 @@ export interface Config {
 
   // ===== 🔎 调试输出 =====
   /** 🔎 开启详细调试日志 */
-  debugLog: boolean;
+  verboseConsoleLog: boolean;
 }
 
 export const DEFAULT_ASSETS = {
@@ -216,7 +216,7 @@ export const Config: Schema<Config> = Schema.intersect([
 
   // ===== 🔎 调试输出 =====
   Schema.object({
-    debugLog: Schema.boolean()
+    verboseConsoleLog: Schema.boolean()
       .default(false)
       .description('🔎 开启详细调试日志，便于排查下载与渲染问题'),
   }).description('🔎 调试输出'),

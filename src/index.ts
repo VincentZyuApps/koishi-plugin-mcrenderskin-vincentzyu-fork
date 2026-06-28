@@ -30,7 +30,7 @@ export const inject = {
 };
 
 export function apply(ctx: Context, config: ConfigType) {
-  const debugLog = config.debugLog ?? false;
+  const verboseConsoleLog = config.verboseConsoleLog ?? false;
 
   ctx.inject(['database'], (ctx) => {
     if (config.enableUuidCache) {
@@ -67,23 +67,23 @@ export function apply(ctx: Context, config: ConfigType) {
   const height = renderSize.viewportHeight;
   const wallPaper = config.wallPaper ?? 'Default';
 
-  const assetsPromise = ensureSharedAssets(ctx, debugLog).then(() => {
+  const assetsPromise = ensureSharedAssets(ctx, verboseConsoleLog).then(() => {
     return readRendererAssets({
       skinview3dBundlePath: resolveRuntimeSharedAssetPath(ctx, config.skinview3dBundlePath, SHARED_ASSET_FILES.skinview3dBundlePath),
       fontPath: resolveRuntimeSharedAssetPath(ctx, config.fontPath, SHARED_ASSET_FILES.fontPath),
       defaultWallPath: resolveRuntimeSharedAssetPath(ctx, config.defaultWallPath, SHARED_ASSET_FILES.defaultWallPath),
-      debugLog,
+      verboseConsoleLog,
       ctx,
     });
   });
 
-  ctx.command(`${mcrCommandName} [玩家名称:string]`, '渲染MC玩家3D图', { authority: 1 }).alias('mcrender').action(async ({ session }, name?: string) => {
+  ctx.command(`${mcrCommandName} [玩家名称:string]`, '🎮渲染MinecraftJava玩家 皮肤和披风的 3D图✨', { authority: 1 }).alias('mcrender').action(async ({ session }, name?: string) => {
     const totalStart = Date.now();
     let networkMs = 0;
     let renderMs = 0;
     let playerName = name ?? initName;
     if (!isValidMcName(playerName)) return '输入的玩家名称非法';
-    if (debugLog) ctx.logger.info('🔎 开始渲染: %s', playerName);
+    if (verboseConsoleLog) ctx.logger.info('🔎 开始渲染: %s', playerName);
 
     const waitingHintMsgId: string | null = config.enableWaitingHint
       ? (await session.send(`${config.enableQuote ? h.quote(session.messageId) : ''}🎨 正在渲染 Minecraft 皮肤，请稍候... ⏳`))[0]
@@ -93,7 +93,7 @@ export function apply(ctx: Context, config: ConfigType) {
     const uuidName = await getUuidNameByNameWithCache(ctx, playerName, {
       enableUuidCache: config.enableUuidCache,
       uuidCacheDays: config.uuidCacheDays,
-      debugLog,
+      verboseConsoleLog,
     });
     if (!uuidName) {
       ctx.logger.error('无法获取 %c 的UUID', playerName);
@@ -106,7 +106,7 @@ export function apply(ctx: Context, config: ConfigType) {
     const profileB64 = await getProfileB64ByUuidWithCache(ctx, uuid, {
       enableProfileCache: config.enableProfileCache,
       profileCacheMinutes: config.profileCacheMinutes,
-      debugLog,
+      verboseConsoleLog,
     });
     if (!profileB64) {
       ctx.logger.error('无法获取 %c 的PROFILE', playerName);
@@ -121,30 +121,30 @@ export function apply(ctx: Context, config: ConfigType) {
     }
 
     let cape = getCapeUrlByTextureProf(profileB64);
-    if (!cape) cape = await getOptiCapeByName(ctx, playerName, debugLog);
-    if (!cape) cape = await getMinecraftCapesByUuid(ctx, uuid, debugLog);
+    if (!cape) cape = await getOptiCapeByName(ctx, playerName, verboseConsoleLog);
+    if (!cape) cape = await getMinecraftCapesByUuid(ctx, uuid, verboseConsoleLog);
 
-    if (config.trySkinBase64) skin = (await getImgB64ByImgUrl(ctx, skin, debugLog)) ?? skin;
+    if (config.trySkinBase64) skin = (await getImgB64ByImgUrl(ctx, skin, verboseConsoleLog)) ?? skin;
     if (config.tryCapeBase64 && cape && !cape.startsWith('data:image/png;base64,')) {
-      cape = await getImgB64ByImgUrl(ctx, cape, debugLog);
+      cape = await getImgB64ByImgUrl(ctx, cape, verboseConsoleLog);
     }
     networkMs = Date.now() - networkStart;
 
     const assets = await assetsPromise;
-    if (debugLog) ctx.logger.info('🔎 资源就绪，开始组装 HTML');
+    if (verboseConsoleLog) ctx.logger.info('🔎 资源就绪，开始组装 HTML');
     const html = generateHtml(wallPaper, playerName, skin, cape, renderSize, assets.fontDataUri, assets.skinview3dBundleJs, assets.defaultWallDataUri);
-    if (debugLog) ctx.logger.info('🔎 HTML 已生成，准备调用 Puppeteer');
+    if (verboseConsoleLog) ctx.logger.info('🔎 HTML 已生成，准备调用 Puppeteer');
     const renderStart = Date.now();
     const result = await ctx.puppeteer.render(html, async (page, next) => {
       const renderPromise = next();
       await page.setViewport({ width, height });
-      if (debugLog) ctx.logger.info('🔎 Puppeteer viewport = %s x %s', width, height);
+      if (verboseConsoleLog) ctx.logger.info('🔎 Puppeteer viewport = %s x %s', width, height);
       const timeoutPromise = new Promise<string>((_, reject) => {
         setTimeout(() => reject(new Error('渲染超时')), renderTimeout);
       });
       try {
         const rendered = (await Promise.race([renderPromise, timeoutPromise])) as string;
-        if (debugLog) ctx.logger.info('🔎 Puppeteer 渲染完成');
+        if (verboseConsoleLog) ctx.logger.info('🔎 Puppeteer 渲染完成');
         return rendered;
       } catch (error) {
         ctx.logger.error('渲染失败: %c', error);

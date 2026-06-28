@@ -108,13 +108,13 @@ function getBundledAssetPath(relativeParts: readonly string[]): string {
   return path.resolve(__dirname, '../assets', ...relativeParts);
 }
 
-async function copyBundledAssetIfMissing(ctx: Context, relativeParts: readonly string[], debugLog = false): Promise<string> {
+async function copyBundledAssetIfMissing(ctx: Context, relativeParts: readonly string[], verboseConsoleLog = false): Promise<string> {
   const sourcePath = getBundledAssetPath(relativeParts);
   const targetPath = getSharedAssetPathByBaseDir(ctx.baseDir, relativeParts);
 
   await fs.promises.mkdir(path.dirname(targetPath), { recursive: true });
   if (fs.existsSync(targetPath)) {
-    debug(ctx, debugLog, '📦 共享资源已存在，跳过复制: %s', targetPath);
+    debug(ctx, verboseConsoleLog, '📦 共享资源已存在，跳过复制: %s', targetPath);
     return targetPath;
   }
 
@@ -123,11 +123,11 @@ async function copyBundledAssetIfMissing(ctx: Context, relativeParts: readonly s
   return targetPath;
 }
 
-export async function ensureSharedAssets(ctx: Context, debugLog = false) {
+export async function ensureSharedAssets(ctx: Context, verboseConsoleLog = false) {
   return {
-    skinview3dBundlePath: await copyBundledAssetIfMissing(ctx, SHARED_ASSET_FILES.skinview3dBundlePath, debugLog),
-    fontPath: await copyBundledAssetIfMissing(ctx, SHARED_ASSET_FILES.fontPath, debugLog),
-    defaultWallPath: await copyBundledAssetIfMissing(ctx, SHARED_ASSET_FILES.defaultWallPath, debugLog),
+    skinview3dBundlePath: await copyBundledAssetIfMissing(ctx, SHARED_ASSET_FILES.skinview3dBundlePath, verboseConsoleLog),
+    fontPath: await copyBundledAssetIfMissing(ctx, SHARED_ASSET_FILES.fontPath, verboseConsoleLog),
+    defaultWallPath: await copyBundledAssetIfMissing(ctx, SHARED_ASSET_FILES.defaultWallPath, verboseConsoleLog),
   };
 }
 
@@ -147,9 +147,9 @@ export function toDataUri(mime: string, data: Buffer): string {
   return `data:${mime};base64,${data.toString('base64')}`;
 }
 
-async function fetchUuidNameByName(ctx: Context, name: string, debugLog = false): Promise<{ id: string; name: string } | undefined> {
+async function fetchUuidNameByName(ctx: Context, name: string, verboseConsoleLog = false): Promise<{ id: string; name: string } | undefined> {
   try {
-    debug(ctx, debugLog, '🔎 查询 Mojang UUID: %s', name);
+    debug(ctx, verboseConsoleLog, '🔎 查询 Mojang UUID: %s', name);
     const resp_json = await ctx.http.get(`https://api.mojang.com/users/profiles/minecraft/${name}`, { responseType: 'json' });
     return { id: resp_json.id, name: resp_json.name };
   } catch {
@@ -158,8 +158,8 @@ async function fetchUuidNameByName(ctx: Context, name: string, debugLog = false)
   }
 }
 
-export async function getUuidNameByName(ctx: Context, name: string, debugLog = false): Promise<{ id: string; name: string } | undefined> {
-  return fetchUuidNameByName(ctx, name, debugLog);
+export async function getUuidNameByName(ctx: Context, name: string, verboseConsoleLog = false): Promise<{ id: string; name: string } | undefined> {
+  return fetchUuidNameByName(ctx, name, verboseConsoleLog);
 }
 
 export async function getUuidNameByNameWithCache(
@@ -168,17 +168,17 @@ export async function getUuidNameByNameWithCache(
   options: {
     enableUuidCache?: boolean;
     uuidCacheDays?: number;
-    debugLog?: boolean;
+    verboseConsoleLog?: boolean;
   },
 ): Promise<{ id: string; name: string } | undefined> {
-  const debugLog = options.debugLog ?? false;
+  const verboseConsoleLog = options.verboseConsoleLog ?? false;
   const cacheEnabled = options.enableUuidCache ?? true;
   const cacheDays = Math.max(1, options.uuidCacheDays ?? 30);
   const database = ctx.database;
 
   if (!cacheEnabled || !database) {
-    if (debugLog && cacheEnabled && !database) ctx.logger.warn('🔎 UUID 缓存已启用，但 database 服务不可用，改为直接查询 Mojang');
-    return fetchUuidNameByName(ctx, name, debugLog);
+    if (verboseConsoleLog && cacheEnabled && !database) ctx.logger.warn('🔎 UUID 缓存已启用，但 database 服务不可用，改为直接查询 Mojang');
+    return fetchUuidNameByName(ctx, name, verboseConsoleLog);
   }
 
   const queryName = name.toLowerCase();
@@ -189,14 +189,14 @@ export async function getUuidNameByNameWithCache(
     const cached = await database.get(UUID_CACHE_TABLE, { queryName });
     const item = cached[0];
     if (item && item.cachedAt >= expiredBefore) {
-      debug(ctx, debugLog, '🔎 命中 UUID 缓存: %s -> %s', name, item.uuid);
+      debug(ctx, verboseConsoleLog, '🔎 命中 UUID 缓存: %s -> %s', name, item.uuid);
       return { id: item.uuid, name: item.playerName };
     }
   } catch {
-    if (debugLog) ctx.logger.warn('🔎 读取 UUID 缓存失败，改为直接查询 Mojang');
+    if (verboseConsoleLog) ctx.logger.warn('🔎 读取 UUID 缓存失败，改为直接查询 Mojang');
   }
 
-  const result = await fetchUuidNameByName(ctx, name, debugLog);
+  const result = await fetchUuidNameByName(ctx, name, verboseConsoleLog);
   if (!result) return undefined;
 
   try {
@@ -208,21 +208,21 @@ export async function getUuidNameByNameWithCache(
         cachedAt: now,
       },
     ]);
-    debug(ctx, debugLog, '🔎 写入 UUID 缓存: %s -> %s', result.name, result.id);
+    debug(ctx, verboseConsoleLog, '🔎 写入 UUID 缓存: %s -> %s', result.name, result.id);
   } catch {
-    if (debugLog) ctx.logger.warn('🔎 写入 UUID 缓存失败');
+    if (verboseConsoleLog) ctx.logger.warn('🔎 写入 UUID 缓存失败');
   }
 
   return result;
 }
 
-export async function getProfileB64ByUuid(ctx: Context, uuid: string, debugLog = false): Promise<string | undefined> {
-  return fetchProfileB64ByUuid(ctx, uuid, debugLog);
+export async function getProfileB64ByUuid(ctx: Context, uuid: string, verboseConsoleLog = false): Promise<string | undefined> {
+  return fetchProfileB64ByUuid(ctx, uuid, verboseConsoleLog);
 }
 
-async function fetchProfileB64ByUuid(ctx: Context, uuid: string, debugLog = false): Promise<string | undefined> {
+async function fetchProfileB64ByUuid(ctx: Context, uuid: string, verboseConsoleLog = false): Promise<string | undefined> {
   try {
-    debug(ctx, debugLog, '🧬 查询 profile: %s', uuid);
+    debug(ctx, verboseConsoleLog, '🧬 查询 profile: %s', uuid);
     const resp_json = await ctx.http.get(`https://sessionserver.mojang.com/session/minecraft/profile/${uuid.replace(/-/g, '')}`, { responseType: 'json' });
     return resp_json.properties?.[0]?.value;
   } catch {
@@ -236,18 +236,18 @@ export async function getProfileB64ByUuidWithCache(
   options: {
     enableProfileCache?: boolean;
     profileCacheMinutes?: number;
-    debugLog?: boolean;
+    verboseConsoleLog?: boolean;
   },
 ): Promise<string | undefined> {
-  const debugLog = options.debugLog ?? false;
+  const verboseConsoleLog = options.verboseConsoleLog ?? false;
   const cacheEnabled = options.enableProfileCache ?? true;
   const cacheMinutes = Math.max(1, options.profileCacheMinutes ?? 10);
   const database = ctx.database;
   const normalizedUuid = uuid.replace(/-/g, '');
 
   if (!cacheEnabled || !database) {
-    if (debugLog && cacheEnabled && !database) ctx.logger.warn('🧬 profile 缓存已启用，但 database 服务不可用，改为直接查询 Mojang');
-    return fetchProfileB64ByUuid(ctx, normalizedUuid, debugLog);
+    if (verboseConsoleLog && cacheEnabled && !database) ctx.logger.warn('🧬 profile 缓存已启用，但 database 服务不可用，改为直接查询 Mojang');
+    return fetchProfileB64ByUuid(ctx, normalizedUuid, verboseConsoleLog);
   }
 
   const now = Date.now();
@@ -257,14 +257,14 @@ export async function getProfileB64ByUuidWithCache(
     const cached = await database.get(PROFILE_CACHE_TABLE, { uuid: normalizedUuid });
     const item = cached[0];
     if (item && item.cachedAt >= expiredBefore) {
-      debug(ctx, debugLog, '🧬 命中 profile 缓存: %s', normalizedUuid);
+      debug(ctx, verboseConsoleLog, '🧬 命中 profile 缓存: %s', normalizedUuid);
       return item.profileB64;
     }
   } catch {
-    if (debugLog) ctx.logger.warn('🧬 读取 profile 缓存失败，改为直接查询 Mojang');
+    if (verboseConsoleLog) ctx.logger.warn('🧬 读取 profile 缓存失败，改为直接查询 Mojang');
   }
 
-  const profileB64 = await fetchProfileB64ByUuid(ctx, normalizedUuid, debugLog);
+  const profileB64 = await fetchProfileB64ByUuid(ctx, normalizedUuid, verboseConsoleLog);
   if (!profileB64) return undefined;
 
   try {
@@ -275,9 +275,9 @@ export async function getProfileB64ByUuidWithCache(
         cachedAt: now,
       },
     ]);
-    debug(ctx, debugLog, '🧬 写入 profile 缓存: %s', normalizedUuid);
+    debug(ctx, verboseConsoleLog, '🧬 写入 profile 缓存: %s', normalizedUuid);
   } catch {
-    if (debugLog) ctx.logger.warn('🧬 写入 profile 缓存失败');
+    if (verboseConsoleLog) ctx.logger.warn('🧬 写入 profile 缓存失败');
   }
 
   return profileB64;
@@ -301,9 +301,9 @@ export function getCapeUrlByTextureProf(profileBase64: string): string | undefin
   }
 }
 
-export async function getOptiCapeByName(ctx: Context, name: string, debugLog = false): Promise<string | undefined> {
+export async function getOptiCapeByName(ctx: Context, name: string, verboseConsoleLog = false): Promise<string | undefined> {
   try {
-    debug(ctx, debugLog, '🪁 尝试下载 OptiFine cape: %s', name);
+    debug(ctx, verboseConsoleLog, '🪁 尝试下载 OptiFine cape: %s', name);
     const resp_content = await ctx.http.get(`http://s.optifine.net/capes/${name}.png`);
     return `data:image/png;base64,${Buffer.from(resp_content, 'utf8').toString('base64')}`;
   } catch {
@@ -311,9 +311,9 @@ export async function getOptiCapeByName(ctx: Context, name: string, debugLog = f
   }
 }
 
-export async function getMinecraftCapesByUuid(ctx: Context, uuid: string, debugLog = false): Promise<string | undefined> {
+export async function getMinecraftCapesByUuid(ctx: Context, uuid: string, verboseConsoleLog = false): Promise<string | undefined> {
   try {
-    debug(ctx, debugLog, '🧥 尝试下载 MinecraftCapes: %s', uuid);
+    debug(ctx, verboseConsoleLog, '🧥 尝试下载 MinecraftCapes: %s', uuid);
     const resp_json = await ctx.http.get(`https://api.minecraftcapes.net/profile/${uuid}`, { responseType: 'json' });
     if (resp_json.textures?.cape) return `data:image/png;base64,${resp_json.textures.cape}`;
     return undefined;
@@ -322,9 +322,9 @@ export async function getMinecraftCapesByUuid(ctx: Context, uuid: string, debugL
   }
 }
 
-export async function getImgB64ByImgUrl(ctx: Context, url: string, debugLog = false): Promise<string | undefined> {
+export async function getImgB64ByImgUrl(ctx: Context, url: string, verboseConsoleLog = false): Promise<string | undefined> {
   try {
-    debug(ctx, debugLog, '📥 下载图片并转 base64: %s', url);
+    debug(ctx, verboseConsoleLog, '📥 下载图片并转 base64: %s', url);
     const resp_content = await ctx.http.get(url);
     return `data:image/png;base64,${Buffer.from(resp_content, 'utf8').toString('base64')}`;
   } catch {
