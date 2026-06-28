@@ -5,6 +5,8 @@ import { DEFAULT_KEYBOARD_ROWS, stringifyCompact } from './qq';
 
 export interface Config {
   enableRender: boolean;
+  mcrCommandName: string;
+  enableQuote: boolean;
   initName: string;
   renderSize: RenderSizeKey;
   trySkinBase64: boolean;
@@ -37,12 +39,29 @@ export const Config: Schema<Config> = Schema.intersect([
   Schema.object({
     enableRender: Schema.boolean()
       .default(false)
-      .description('🚀 是否启用 `MCR` 指令'),
+      .description('🚀 是否启用渲染指令'),
+  }).description('⚙️ 常规设置'),
 
+  // 🎯 指令设置
+  Schema.object({
+    mcrCommandName: Schema.string()
+      .default('mcrs')
+      .description('🎯 Minecraft 皮肤渲染指令名'),
+  }).description('🎯 指令设置'),
+
+  // 💬 消息设置
+  Schema.object({
+    enableQuote: Schema.boolean()
+      .default(true)
+      .description('💬 是否自动引用回复触发指令的消息'),
+  }).description('💬 消息设置'),
+
+  // 👤 玩家设置
+  Schema.object({
     initName: Schema.string()
       .default('VincentZyu')
       .pattern(/^[a-zA-Z0-9_]{3,16}$/)
-      .description('👤 `MCR` 指令的默认玩家名称'),
+      .description('👤 渲染指令的默认玩家名称'),
 
     renderSize: Schema.union([
       Schema.const('360P'),
@@ -52,7 +71,7 @@ export const Config: Schema<Config> = Schema.intersect([
     ])
       .default('360P')
       .description('📐 指定渲染分辨率，数值越高越耗时'),
-  }).description('⚙️ 常规设置'),
+  }).description('👤 玩家设置'),
 
   // 🌐 下载设置
   Schema.object({
@@ -145,7 +164,7 @@ export const Config: Schema<Config> = Schema.intersect([
       .role('textarea', { rows: [5, 10] })
       .default(stringifyCompact(DEFAULT_KEYBOARD_ROWS))
       .description(
-        '📋 QQ Markdown 按钮 JSON 配置<br><em>支持变量: <code>${playerName}</code> <code>${userId}</code></em>',
+        '📋 QQ Markdown 按钮 JSON 配置<br><em>支持变量: <code>${mcrCommandName}</code> <code>${playerName}</code> <code>${userId}</code></em>',
       ),
   }).description('🤖 QQ 官方 Bot 平台设置'),
 

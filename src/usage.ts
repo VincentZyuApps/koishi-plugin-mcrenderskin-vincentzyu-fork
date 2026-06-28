@@ -57,7 +57,7 @@ export const usage = `
 <ol>
   <li>先安装并启用 <b>Puppeteer</b> 依赖插件。</li>
   <li>启用本插件的 <code>enableRender</code> 开关。</li>
-  <li>使用 <code>MCR [玩家名称]</code> 渲染指定玩家。</li>
+  <li>使用 <code>mcrs [玩家名称]</code> 渲染指定玩家。</li>
 </ol>
 
 <hr>

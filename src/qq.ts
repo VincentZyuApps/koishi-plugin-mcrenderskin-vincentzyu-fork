@@ -9,7 +9,7 @@ export const DEFAULT_KEYBOARD_ROWS = {
           action: {
             type: 2,
             permission: { type: 2 },
-            data: 'MCR ${playerName}',
+            data: '${mcrCommandName} ${playerName}',
             enter: true,
           },
         },
@@ -18,7 +18,7 @@ export const DEFAULT_KEYBOARD_ROWS = {
           action: {
             type: 2,
             permission: { type: 2 },
-            data: 'MCR -h',
+            data: '${mcrCommandName} -h',
             enter: true,
           },
         },
@@ -59,11 +59,12 @@ export function stringifyCompact(obj: any): string {
   return result;
 }
 
-export function buildRenderKeyboard(playerName: string, userId: string, customJson?: string): object {
+export function buildRenderKeyboard(playerName: string, userId: string, mcrCommandName: string, customJson?: string): object {
   let raw = customJson || JSON.stringify(DEFAULT_KEYBOARD_ROWS);
   try {
     raw = raw.replace(/\$\{playerName\}/g, playerName);
     raw = raw.replace(/\$\{userId\}/g, userId);
+    raw = raw.replace(/\$\{mcrCommandName\}/g, mcrCommandName);
     const parsed = JSON.parse(raw);
     if (parsed?.rows?.length) return parsed;
   } catch {}

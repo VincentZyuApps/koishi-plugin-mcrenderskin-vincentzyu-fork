@@ -22,6 +22,18 @@
 
 🎮 基于`skinView3D.js` 渲染Minecraft Java玩家的 皮肤和披风 3D图片 ✨
 
+## 🖼️ 效果预览
+
+<p>
+  <img src="./docs/images/preview/preview.qq.onebot.png" alt="mcrenderskin-vincentzyu-fork QQ OneBot 效果预览" width="720">
+  <br><em>📱 QQ OneBot / 官方 Bot — 渲染图 + Markdown + 按钮</em>
+</p>
+
+<p>
+  <img src="./docs/images/preview/preview.skinview3d.puppeteer.render.image.png" alt="mcrenderskin-vincentzyu-fork skinview3d Puppeteer 渲染效果预览" width="720">
+  <br><em>🖼️ skinview3d Puppeteer 渲染原图</em>
+</p>
+
 ---
 
 ## ✨ 功能
@@ -48,7 +60,7 @@ npm install koishi-plugin-mcrenderskin-vincentzyu-fork
 
 1. 先启用 `puppeteer` 依赖插件
 2. 在本插件里开启 `enableRender`
-3. 使用指令 `MCR [玩家名称]`
+3. 使用指令 `mcrs [玩家名称]`
 
 ---
 
@@ -57,7 +69,11 @@ npm install koishi-plugin-mcrenderskin-vincentzyu-fork
 ### 常规设置
 
 - `enableRender`
-  - 是否启用 `MCR` 指令
+  - 是否启用渲染指令
+- `mcrCommandName`
+  - 渲染指令名称，默认 `mcrs`
+- `enableQuote`
+  - 是否自动引用回复触发指令的消息
 - `initName`
   - 默认玩家名称
 - `renderSize`

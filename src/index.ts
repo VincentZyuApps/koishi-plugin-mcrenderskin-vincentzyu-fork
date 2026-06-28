@@ -1,4 +1,4 @@
-import { Context } from 'koishi';
+import { Context, h } from 'koishi';
 import {} from 'koishi-plugin-puppeteer';
 import { type Config as ConfigType } from './config';
 import { generateHtml, readRendererAssets } from './render';
@@ -64,6 +64,7 @@ export function apply(ctx: Context, config: ConfigType) {
   const initName = config.initName ?? 'VincentZyu';
   const renderTimeout = config.renderTimeOut ?? 5000;
   const renderSize = getRenderSize(config.renderSize ?? '360P');
+  const mcrCommandName = config.mcrCommandName || 'mcrs';
   const width = renderSize.viewportWidth;
   const height = renderSize.viewportHeight;
   const wallPaper = config.wallPaper ?? 'Default';
@@ -78,7 +79,7 @@ export function apply(ctx: Context, config: ConfigType) {
     });
   });
 
-  ctx.command('MCR [玩家名称:string]', '渲染MC玩家3D图', { authority: 1 }).alias('mcrender').action(async ({ session }, name?: string) => {
+  ctx.command(`${mcrCommandName} [玩家名称:string]`, '渲染MC玩家3D图', { authority: 1 }).alias('mcrender').action(async ({ session }, name?: string) => {
     const totalStart = Date.now();
     let networkMs = 0;
     let renderMs = 0;
@@ -150,7 +151,8 @@ export function apply(ctx: Context, config: ConfigType) {
     const totalMs = Date.now() - totalStart;
     const renderInfo = `\n⏱️ 网络请求: ${networkMs}ms | 🎨 Puppeteer 渲染: ${renderMs}ms | 📊 总耗时: ${totalMs}ms`;
     const baseMessage = (result as string | undefined) ?? `渲染 ${playerName} 失败`;
-    const message = config.showRenderInfo ? `${baseMessage}${renderInfo}` : baseMessage;
+    const quotePrefix = config.enableQuote ? h.quote(session.messageId) : '';
+    const message = `${quotePrefix}${config.showRenderInfo ? `${baseMessage}${renderInfo}` : baseMessage}`;
     const renderOk = !message.includes('失败') && !message.includes('超时');
     if (renderOk && config.enableQQMarkdown && (session.platform === 'qq' || session.platform === 'qqguild')) {
       await session.send(message);
@@ -158,7 +160,7 @@ export function apply(ctx: Context, config: ConfigType) {
         ? { networkMs, renderMs, totalMs }
         : undefined;
       const md = buildRenderMarkdown(playerName, timing);
-      const kb = buildRenderKeyboard(playerName, session.userId, config.qqMarkdownKeyboardJson);
+      const kb = buildRenderKeyboard(playerName, session.userId, mcrCommandName, config.qqMarkdownKeyboardJson);
       await sendQQMarkdown(session, md, kb);
       return;
     }
