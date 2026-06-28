@@ -4,27 +4,68 @@ import { type RenderSizeKey } from './util';
 import { DEFAULT_KEYBOARD_ROWS, stringifyCompact } from './qq';
 
 export interface Config {
-  enableRender: boolean;
+  // ===== 🎯 指令设置 =====
+  /** 🎯 Minecraft 皮肤渲染指令名 */
   mcrCommandName: string;
+
+  // ===== 💬 消息设置 =====
+  /** 💬 是否自动引用回复触发指令的消息 */
   enableQuote: boolean;
+  /** ⏳ 是否显示「渲染中，请等待...」提示 */
   enableWaitingHint: boolean;
+
+  // ===== 👤 玩家设置 =====
+  /** 👤 渲染指令的默认玩家名称 */
   initName: string;
+  /** 📐 渲染分辨率 */
   renderSize: RenderSizeKey;
+
+  // ===== 🌐 下载设置 =====
+  /** 🌐 尝试使用 Koishi 的 ctx.http 下载皮肤，而非走 Puppeteer */
   trySkinBase64: boolean;
+  /** 🪁 尝试使用 Koishi 的 ctx.http 下载披风，而非走 Puppeteer */
   tryCapeBase64: boolean;
+
+  // ===== 🖼️ 背景图设置 =====
+  /** 🖼️ 自定义背景图 */
   wallPaper: string;
+
+  // ===== ⏱️ 运行控制 =====
+  /** ⏱️ 渲染超时阈值 ms */
   renderTimeOut: number;
+
+  // ===== 📁 资源路径 =====
+  /** 📦 skinview3d bundle 路径 */
   skinview3dBundlePath: string;
+  /** 🔤 Minecraft 字体路径 */
   fontPath: string;
+  /** 🌄 默认背景图路径 */
   defaultWallPath: string;
+
+  // ===== 🤖 QQ 官方 Bot 平台设置 =====
+  /** 💬 是否启用 QQ Markdown 消息 */
   enableQQMarkdown: boolean;
+  /** ⏱️ 是否在 QQ Markdown 中展示网络请求、渲染和总耗时 */
   enableQQMarkdownRenderInfo: boolean;
+  /** 📋 QQ Markdown 按钮 JSON 配置 */
   qqMarkdownKeyboardJson: string;
+
+  // ===== 📊 渲染信息 =====
+  /** 🖼️ 是否在图片消息后追加渲染耗时信息 */
   showRenderInfo: boolean;
+
+  // ===== 🗄️ 缓存设置 =====
+  /** 🗄️ 是否启用 UUID 数据库缓存 */
   enableUuidCache: boolean;
+  /** 📅 UUID 缓存有效期（天） */
   uuidCacheDays: number;
+  /** 🧬 是否启用 Mojang profile 数据库缓存 */
   enableProfileCache: boolean;
+  /** ⏲️ Mojang profile 缓存有效期（分钟） */
   profileCacheMinutes: number;
+
+  // ===== 🔎 调试输出 =====
+  /** 🔎 开启详细调试日志 */
   debugLog: boolean;
 }
 
@@ -34,23 +75,16 @@ export const DEFAULT_ASSETS = {
   defaultWallPath: path.resolve(process.cwd(), 'data/assets/mcrenderskin-vincentzyu-fork/image/default-wall.jpg'),
 };
 
-// 🧩 插件配置
+// ===== 🧩 插件配置 =====
 export const Config: Schema<Config> = Schema.intersect([
-  // ⚙️ 常规设置
-  Schema.object({
-    enableRender: Schema.boolean()
-      .default(false)
-      .description('🚀 是否启用渲染指令'),
-  }).description('⚙️ 常规设置'),
-
-  // 🎯 指令设置
+  // ===== 🎯 指令设置 =====
   Schema.object({
     mcrCommandName: Schema.string()
       .default('mcrs')
       .description('🎯 Minecraft 皮肤渲染指令名'),
   }).description('🎯 指令设置'),
 
-  // 💬 消息设置
+  // ===== 💬 消息设置 =====
   Schema.object({
     enableQuote: Schema.boolean()
       .default(true)
@@ -61,7 +95,7 @@ export const Config: Schema<Config> = Schema.intersect([
       .description('⏳ 是否启用「正在渲染，请稍候...」等待提示消息'),
   }).description('💬 消息设置'),
 
-  // 👤 玩家设置
+  // ===== 👤 玩家设置 =====
   Schema.object({
     initName: Schema.string()
       .default('VincentZyu')
@@ -74,11 +108,11 @@ export const Config: Schema<Config> = Schema.intersect([
       Schema.const('1440P'),
       Schema.const('2200P'),
     ])
-      .default('360P')
+      .default('720P')
       .description('📐 指定渲染分辨率，数值越高越耗时'),
   }).description('👤 玩家设置'),
 
-  // 🌐 下载设置
+  // ===== 🌐 下载设置 =====
   Schema.object({
     trySkinBase64: Schema.boolean()
       .default(false)
@@ -89,7 +123,7 @@ export const Config: Schema<Config> = Schema.intersect([
       .description('🪁 尝试使用 Koishi 的 `ctx.http` 下载披风，而非走 Puppeteer'),
   }).description('🌐 下载设置'),
 
-  // 🖼️ 背景图设置
+  // ===== 🖼️ 背景图设置 =====
   Schema.object({
     wallPaper: Schema.union([
       Schema.const('Default'),
@@ -105,7 +139,7 @@ export const Config: Schema<Config> = Schema.intersect([
       .description('🖼️ 渲染时使用的自定义背景图<br>🌄 填写 <code>Default</code> 时使用默认背景图：<code>ctx.baseDir/data/assets/mcrenderskin-vincentzyu-fork/image/default-wall.jpg</code>'),
   }).description('🖼️ 背景图设置'),
 
-  // ⏱️ 运行控制
+  // ===== ⏱️ 运行控制 =====
   Schema.object({
     renderTimeOut: Schema.number()
       .min(0)
@@ -114,7 +148,7 @@ export const Config: Schema<Config> = Schema.intersect([
       .description('⏱️ 渲染超时阈值，单位 ms'),
   }).description('⏱️ 运行控制'),
 
-  // 🗄️ 缓存设置
+  // ===== 🗄️ 缓存设置 =====
   Schema.object({
     enableUuidCache: Schema.boolean()
       .default(true)
@@ -137,7 +171,7 @@ export const Config: Schema<Config> = Schema.intersect([
       .description('⏲️ Mojang profile 缓存有效期，单位：分钟'),
   }).description('🗄️ 缓存设置'),
 
-  // 📁 资源路径
+  // ===== 📁 资源路径 =====
   Schema.object({
     skinview3dBundlePath: Schema.string()
       .role('textarea', { rows: [2, 5] })
@@ -155,7 +189,7 @@ export const Config: Schema<Config> = Schema.intersect([
       .description('🌄 默认背景图路径（默认展示 cwd/data/assets；运行时自动使用 ctx.baseDir/data/assets）'),
   }).description('📁 资源路径'),
 
-  // 🤖 QQ 官方 Bot 平台设置
+  // ===== 🤖 QQ 官方 Bot 平台设置 =====
   Schema.object({
     enableQQMarkdown: Schema.boolean()
       .default(true)
@@ -173,14 +207,14 @@ export const Config: Schema<Config> = Schema.intersect([
       ),
   }).description('🤖 QQ 官方 Bot 平台设置'),
 
-  // 📊 渲染信息
+  // ===== 📊 渲染信息 =====
   Schema.object({
     showRenderInfo: Schema.boolean()
       .default(true)
       .description('⏱️ 是否在图片消息后追加网络请求、Puppeteer 渲染和总耗时信息'),
   }).description('📊 渲染信息'),
 
-  // 🔎 调试输出
+  // ===== 🔎 调试输出 =====
   Schema.object({
     debugLog: Schema.boolean()
       .default(false)

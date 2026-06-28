@@ -30,8 +30,6 @@ export const inject = {
 };
 
 export function apply(ctx: Context, config: ConfigType) {
-  const enabled = config.enableRender ?? false;
-  if (!enabled) return;
   const debugLog = config.debugLog ?? false;
 
   ctx.inject(['database'], (ctx) => {

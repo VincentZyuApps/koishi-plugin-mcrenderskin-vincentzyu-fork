@@ -53,66 +53,95 @@
 ## 📦 安装
 
 ```bash
+cd /path/to/koishi-app
+ls
+# 能看到koishi.yml, package.json, data文件夹 就说明路径对了
 npm install koishi-plugin-mcrenderskin-vincentzyu-fork
+# or use yarn
+yarn add koishi-plugin-mcrenderskin-vincentzyu-fork
 ```
 
-在 Koishi 控制台插件市场中搜索 `mcrenderskin-vincentzyu-fork` 也可以安装。
-
----
-
-## 🧭 使用
-
-1. 先启用 `puppeteer` 依赖插件
-2. 在本插件里开启 `enableRender`
-3. 使用指令 `mcrs [玩家名称]`
+或者 在 Koishi 控制台插件市场中搜索 `mcrenderskin-vincentzyu-fork` 也可以安装。
 
 ---
 
 ## ⚙️ 配置说明
 
-### 常规设置
+### 🎯 指令设置
 
-- `enableRender`
-  - 是否启用渲染指令
-- `mcrCommandName`
-  - 渲染指令名称，默认 `mcrs`
-- `enableQuote`
-  - 是否自动引用回复触发指令的消息
-- `initName`
-  - 默认玩家名称
-- `renderSize`
-  - 渲染分辨率，越高越清晰，但更耗时
+| 配置项 | 类型 | 默认值 | 说明 |
+|---|---|---|---|
+| `mcrCommandName` | `string` | `"mcrs"` | Minecraft 皮肤渲染指令名 |
 
-### 下载设置
+### 💬 消息设置
 
-- `trySkinBase64`
-  - 尝试先用 `ctx.http` 下载皮肤，再交给浏览器渲染
-- `tryCapeBase64`
-  - 尝试先用 `ctx.http` 下载披风，再交给浏览器渲染
+| 配置项 | 类型 | 默认值 | 说明 |
+|---|---|---|---|
+| `enableQuote` | `boolean` | `true` | 是否自动引用回复触发指令的消息 |
+| `enableWaitingHint` | `boolean` | `true` | 是否显示「正在渲染，请稍候」等待提示 |
 
-### 背景图设置
+### 👤 玩家设置
 
-- `wallPaper`
-  - 支持 `Default`、URL、Base64、路径
+| 配置项 | 类型 | 默认值 | 说明 |
+|---|---|---|---|
+| `initName` | `string` | `"VincentZyu"` | 渲染指令的默认玩家名称 |
+| `renderSize` | `"360P" \| "720P" \| "1440P" \| "2200P"` | `"720P"` | 渲染分辨率，数值越高越清晰但越耗时 |
 
-### 运行控制
+### 🌐 下载设置
 
-- `renderTimeOut`
-  - Puppeteer 渲染超时阈值
+| 配置项 | 类型 | 默认值 | 说明 |
+|---|---|---|---|
+| `trySkinBase64` | `boolean` | `false` | 尝试使用 Koishi 的 `ctx.http` 下载皮肤，而非走 Puppeteer |
+| `tryCapeBase64` | `boolean` | `false` | 尝试使用 Koishi 的 `ctx.http` 下载披风，而非走 Puppeteer |
 
-### 资源路径
+### 🖼️ 背景图设置
 
-- `skinview3dBundlePath`
-  - 本地 `assets/vendor/skinview3d.bundle.js`
-- `fontPath`
-  - Minecraft 字体文件
-- `defaultWallPath`
-  - 默认背景图文件
+| 配置项 | 类型 | 默认值 | 说明 |
+|---|---|---|---|
+| `wallPaper` | `"Default" \| URL \| Base64 \| Path` | `"Default"` | 自定义背景图；`Default` 为内置默认背景 |
 
-### 调试输出
+### ⏱️ 运行控制
 
-- `debugLog`
-  - 开启后输出更详细的资源读取、下载和渲染日志
+| 配置项 | 类型 | 默认值 | 说明 |
+|---|---|---|---|
+| `renderTimeOut` | `number` | `5000` | Puppeteer 渲染超时阈值，单位 ms |
+
+### 📁 资源路径
+
+| 配置项 | 类型 | 默认值 | 说明 |
+|---|---|---|---|
+| `skinview3dBundlePath` | `string` | `cwd/data/assets/.../skinview3d.bundle.js` | skinview3d bundle 路径，运行时自动使用 `ctx.baseDir/data/assets/...` |
+| `fontPath` | `string` | `cwd/data/assets/.../MinecraftAE.sub.ttf` | Minecraft 字体路径，运行时自动使用 `ctx.baseDir/data/assets/...` |
+| `defaultWallPath` | `string` | `cwd/data/assets/.../default-wall.jpg` | 默认背景图路径，运行时自动使用 `ctx.baseDir/data/assets/...` |
+
+### 🗄️ 缓存设置
+
+| 配置项 | 类型 | 默认值 | 说明 |
+|---|---|---|---|
+| `enableUuidCache` | `boolean` | `true` | 是否启用玩家 UUID 数据库缓存，需要 database 服务 |
+| `uuidCacheDays` | `number` | `30` | UUID 缓存有效期，单位：天 |
+| `enableProfileCache` | `boolean` | `true` | 是否启用 Mojang profile 数据库缓存，需要 database 服务 |
+| `profileCacheMinutes` | `number` | `10` | Mojang profile 缓存有效期，单位：分钟 |
+
+### 🤖 QQ 官方 Bot 平台设置
+
+| 配置项 | 类型 | 默认值 | 说明 |
+|---|---|---|---|
+| `enableQQMarkdown` | `boolean` | `true` | 在 QQ 官方 Bot 平台发送渲染图后附带 Markdown + 按钮消息 |
+| `enableQQMarkdownRenderInfo` | `boolean` | `true` | 是否在 QQ Markdown 中展示网络请求、Puppeteer 渲染和总耗时 |
+| `qqMarkdownKeyboardJson` | `string` | 默认键盘 JSON | QQ Markdown 按钮 JSON 配置，支持变量 `${mcrCommandName}` `${playerName}` `${userId}` |
+
+### 📊 渲染信息
+
+| 配置项 | 类型 | 默认值 | 说明 |
+|---|---|---|---|
+| `showRenderInfo` | `boolean` | `true` | 是否在图片消息后追加网络请求、Puppeteer 渲染和总耗时信息 |
+
+### 🔎 调试输出
+
+| 配置项 | 类型 | 默认值 | 说明 |
+|---|---|---|---|
+| `debugLog` | `boolean` | `false` | 开启详细调试日志，便于排查下载与渲染问题 |
 
 ---
 
@@ -120,7 +149,16 @@ npm install koishi-plugin-mcrenderskin-vincentzyu-fork
 
 ### 只显示背景，没有玩家
 
-- 检查 `puppeteer` 是否正常启动
+> [!important]
+>
+> **Puppeteer 必须添加以下三个参数才能正常渲染皮肤：**
+> - `--use-gl=angle`
+> - `--use-angle=swiftshader`
+> - `--use-vulkan=swiftshader`
+>
+> 缺少这些参数可能导致只显示背景、没有玩家模型，或在 Docker / 无头环境下渲染失败。
+
+- 检查 `puppeteer` 的 `args` 配置是否包含上述三个参数
 - 检查 `assets/vendor/skinview3d.bundle.js` 是否能读到
 - 检查字体和背景图路径是否正确
 - Docker 环境下可尝试将 `chromium` 替换为 `chromium-swiftshader`
@@ -131,8 +169,4 @@ npm install koishi-plugin-mcrenderskin-vincentzyu-fork
 - 可尝试开启 `tryCapeBase64`
 - 打开 `debugLog` 查看失败阶段
 
----
 
-## 🪪 许可
-
-MIT

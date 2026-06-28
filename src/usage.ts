@@ -83,9 +83,18 @@ export const usage = `
 <hr>
 
 <h2>⚠️ 常见问题</h2>
+
+<h2 style="color: #ff4444; font-weight: 900; font-size: 22px; margin: 20px 0; border: 2px solid #ff4444; padding: 12px; border-radius: 8px; background: rgba(255,68,68,0.08);">🚨 Puppeteer 必须添加以下三个参数才能正常渲染皮肤！</h2>
+<p style="font-family: monospace; font-size: 14px; line-height: 2;">
+  <code>--use-gl=angle</code><br>
+  <code>--use-angle=swiftshader</code><br>
+  <code>--use-vulkan=swiftshader</code>
+</p>
+<p style="color: #ff4444; font-weight: bold;">缺少这些参数可能导致只显示背景、没有玩家模型，或在 Docker / 无头环境下渲染失败。请检查 Puppeteer 配置中的 args 是否包含上述三个参数。</p>
+
 <ol>
   <li><b>只显示背景，没有玩家</b><br>
-    可能是浏览器 WebGL 不可用，或 bundle / 字体 / 图片资源加载失败。
+    可能是浏览器 WebGL 不可用，或 bundle / 字体 / 图片资源加载失败。请先在 Puppeteer 的 args 中添加 <code>--use-gl=angle --use-angle=swiftshader --use-vulkan=swiftshader</code>。
   </li>
   <li><b>Docker 环境渲染失败</b><br>
     官方 Alpine 镜像下可尝试将 <code>chromium</code> 替换为 <code>chromium-swiftshader</code>，然后重启 Puppeteer。
