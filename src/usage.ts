@@ -17,8 +17,8 @@ export const usage = `
     <img src="https://img.shields.io/badge/Gitee-C71D23?style=for-the-badge&logo=gitee&logoColor=white" alt="Gitee">
   </a>
   <br>
-  <a href="https://forum.koishi.xyz/t/topic/xxxxx/3" target="_blank">
-    <img src="https://img.shields.io/badge/Koishi Forum-xxxxx-5546A3?style=for-the-badge&logo=https%3A%2F%2Fupload.wikimedia.org%2Fwikipedia%2Fcommons%2Ff%2Ff3%2FKoishi.js_Logo.png&logoColor=white" alt="Forum">
+  <a href="https://forum.koishi.xyz/t/topic/12622/3" target="_blank">
+    <img src="https://img.shields.io/badge/Koishi Forum-12622-5546A3?style=for-the-badge&logo=https%3A%2F%2Fupload.wikimedia.org%2Fwikipedia%2Fcommons%2Ff%2Ff3%2FKoishi.js_Logo.png&logoColor=white" alt="Forum">
   </a>
   <a href="https://qm.qq.com/q/4vjto4V7Di" target="_blank">
     <img src="https://img.shields.io/badge/QQ群-259248174-12B7F5?style=flat-square&logo=qq&logoColor=white" alt="QQ群">
