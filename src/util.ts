@@ -3,8 +3,38 @@ import path from 'node:path';
 import { Context } from 'koishi';
 import { resolveAssetPath } from './config';
 
+const SHARED_ASSET_ROOT_PARTS = ['data', 'assets', 'mcrenderskin-vincentzyu-fork'];
+
+export const SHARED_ASSET_FILES = {
+  skinview3dBundlePath: ['vendor', 'skinview3d.bundle.js'],
+  fontPath: ['fonts', 'minecraft.woff2'],
+  defaultWallPath: ['image', 'default-wall.jpg'],
+} as const;
+
 export const RENDER_SIZE_KEYS = ['360P', '720P', '1440P', '2200P'] as const;
 export type RenderSizeKey = (typeof RENDER_SIZE_KEYS)[number];
+export const UUID_CACHE_TABLE = 'mcrenderskin_vincentzyu_fork_uuid_cache';
+export const PROFILE_CACHE_TABLE = 'mcrenderskin_vincentzyu_fork_profile_cache';
+
+export interface UuidNameCache {
+  queryName: string;
+  uuid: string;
+  playerName: string;
+  cachedAt: number;
+}
+
+export interface ProfileCache {
+  uuid: string;
+  profileB64: string;
+  cachedAt: number;
+}
+
+declare module 'koishi' {
+  interface Tables {
+    mcrenderskin_vincentzyu_fork_uuid_cache: UuidNameCache;
+    mcrenderskin_vincentzyu_fork_profile_cache: ProfileCache;
+  }
+}
 
 export interface RenderSize {
   viewportWidth: number;
@@ -66,11 +96,58 @@ export function readBinaryAsset(filePath: string, baseDir = process.cwd()): Buff
   return fs.readFileSync(resolveAssetPath(filePath, baseDir));
 }
 
+export function getSharedAssetRootByBaseDir(baseDir: string): string {
+  return path.join(baseDir, ...SHARED_ASSET_ROOT_PARTS);
+}
+
+export function getSharedAssetPathByBaseDir(baseDir: string, relativeParts: readonly string[]): string {
+  return path.join(getSharedAssetRootByBaseDir(baseDir), ...relativeParts);
+}
+
+function getBundledAssetPath(relativeParts: readonly string[]): string {
+  return path.resolve(__dirname, '../assets', ...relativeParts);
+}
+
+async function copyBundledAssetIfMissing(ctx: Context, relativeParts: readonly string[], debugLog = false): Promise<string> {
+  const sourcePath = getBundledAssetPath(relativeParts);
+  const targetPath = getSharedAssetPathByBaseDir(ctx.baseDir, relativeParts);
+
+  await fs.promises.mkdir(path.dirname(targetPath), { recursive: true });
+  if (fs.existsSync(targetPath)) {
+    debug(ctx, debugLog, '📦 共享资源已存在，跳过复制: %s', targetPath);
+    return targetPath;
+  }
+
+  await fs.promises.copyFile(sourcePath, targetPath);
+  ctx.logger.info('📦 已复制内置资源到 Koishi 数据目录: %s', targetPath);
+  return targetPath;
+}
+
+export async function ensureSharedAssets(ctx: Context, debugLog = false) {
+  return {
+    skinview3dBundlePath: await copyBundledAssetIfMissing(ctx, SHARED_ASSET_FILES.skinview3dBundlePath, debugLog),
+    fontPath: await copyBundledAssetIfMissing(ctx, SHARED_ASSET_FILES.fontPath, debugLog),
+    defaultWallPath: await copyBundledAssetIfMissing(ctx, SHARED_ASSET_FILES.defaultWallPath, debugLog),
+  };
+}
+
+export function resolveRuntimeSharedAssetPath(ctx: Context, configuredPath: string, relativeParts: readonly string[]): string {
+  const configured = configuredPath?.trim();
+  const configDefaultPath = getSharedAssetPathByBaseDir(process.cwd(), relativeParts);
+  const runtimeDefaultPath = getSharedAssetPathByBaseDir(ctx.baseDir, relativeParts);
+
+  if (!configured || configured === configDefaultPath || configured === runtimeDefaultPath) {
+    return runtimeDefaultPath;
+  }
+
+  return configured;
+}
+
 export function toDataUri(mime: string, data: Buffer): string {
   return `data:${mime};base64,${data.toString('base64')}`;
 }
 
-export async function getUuidNameByName(ctx: Context, name: string, debugLog = false): Promise<{ id: string; name: string } | undefined> {
+async function fetchUuidNameByName(ctx: Context, name: string, debugLog = false): Promise<{ id: string; name: string } | undefined> {
   try {
     debug(ctx, debugLog, '🔎 查询 Mojang UUID: %s', name);
     const resp_json = await ctx.http.get(`https://api.mojang.com/users/profiles/minecraft/${name}`, { responseType: 'json' });
@@ -81,7 +158,69 @@ export async function getUuidNameByName(ctx: Context, name: string, debugLog = f
   }
 }
 
+export async function getUuidNameByName(ctx: Context, name: string, debugLog = false): Promise<{ id: string; name: string } | undefined> {
+  return fetchUuidNameByName(ctx, name, debugLog);
+}
+
+export async function getUuidNameByNameWithCache(
+  ctx: Context,
+  name: string,
+  options: {
+    enableUuidCache?: boolean;
+    uuidCacheDays?: number;
+    debugLog?: boolean;
+  },
+): Promise<{ id: string; name: string } | undefined> {
+  const debugLog = options.debugLog ?? false;
+  const cacheEnabled = options.enableUuidCache ?? true;
+  const cacheDays = Math.max(1, options.uuidCacheDays ?? 30);
+  const database = ctx.database;
+
+  if (!cacheEnabled || !database) {
+    if (debugLog && cacheEnabled && !database) ctx.logger.warn('🔎 UUID 缓存已启用，但 database 服务不可用，改为直接查询 Mojang');
+    return fetchUuidNameByName(ctx, name, debugLog);
+  }
+
+  const queryName = name.toLowerCase();
+  const now = Date.now();
+  const expiredBefore = now - cacheDays * 24 * 60 * 60 * 1000;
+
+  try {
+    const cached = await database.get(UUID_CACHE_TABLE, { queryName });
+    const item = cached[0];
+    if (item && item.cachedAt >= expiredBefore) {
+      debug(ctx, debugLog, '🔎 命中 UUID 缓存: %s -> %s', name, item.uuid);
+      return { id: item.uuid, name: item.playerName };
+    }
+  } catch {
+    if (debugLog) ctx.logger.warn('🔎 读取 UUID 缓存失败，改为直接查询 Mojang');
+  }
+
+  const result = await fetchUuidNameByName(ctx, name, debugLog);
+  if (!result) return undefined;
+
+  try {
+    await database.upsert(UUID_CACHE_TABLE, [
+      {
+        queryName,
+        uuid: result.id,
+        playerName: result.name,
+        cachedAt: now,
+      },
+    ]);
+    debug(ctx, debugLog, '🔎 写入 UUID 缓存: %s -> %s', result.name, result.id);
+  } catch {
+    if (debugLog) ctx.logger.warn('🔎 写入 UUID 缓存失败');
+  }
+
+  return result;
+}
+
 export async function getProfileB64ByUuid(ctx: Context, uuid: string, debugLog = false): Promise<string | undefined> {
+  return fetchProfileB64ByUuid(ctx, uuid, debugLog);
+}
+
+async function fetchProfileB64ByUuid(ctx: Context, uuid: string, debugLog = false): Promise<string | undefined> {
   try {
     debug(ctx, debugLog, '🧬 查询 profile: %s', uuid);
     const resp_json = await ctx.http.get(`https://sessionserver.mojang.com/session/minecraft/profile/${uuid.replace(/-/g, '')}`, { responseType: 'json' });
@@ -89,6 +228,59 @@ export async function getProfileB64ByUuid(ctx: Context, uuid: string, debugLog =
   } catch {
     return undefined;
   }
+}
+
+export async function getProfileB64ByUuidWithCache(
+  ctx: Context,
+  uuid: string,
+  options: {
+    enableProfileCache?: boolean;
+    profileCacheMinutes?: number;
+    debugLog?: boolean;
+  },
+): Promise<string | undefined> {
+  const debugLog = options.debugLog ?? false;
+  const cacheEnabled = options.enableProfileCache ?? true;
+  const cacheMinutes = Math.max(1, options.profileCacheMinutes ?? 10);
+  const database = ctx.database;
+  const normalizedUuid = uuid.replace(/-/g, '');
+
+  if (!cacheEnabled || !database) {
+    if (debugLog && cacheEnabled && !database) ctx.logger.warn('🧬 profile 缓存已启用，但 database 服务不可用，改为直接查询 Mojang');
+    return fetchProfileB64ByUuid(ctx, normalizedUuid, debugLog);
+  }
+
+  const now = Date.now();
+  const expiredBefore = now - cacheMinutes * 60 * 1000;
+
+  try {
+    const cached = await database.get(PROFILE_CACHE_TABLE, { uuid: normalizedUuid });
+    const item = cached[0];
+    if (item && item.cachedAt >= expiredBefore) {
+      debug(ctx, debugLog, '🧬 命中 profile 缓存: %s', normalizedUuid);
+      return item.profileB64;
+    }
+  } catch {
+    if (debugLog) ctx.logger.warn('🧬 读取 profile 缓存失败，改为直接查询 Mojang');
+  }
+
+  const profileB64 = await fetchProfileB64ByUuid(ctx, normalizedUuid, debugLog);
+  if (!profileB64) return undefined;
+
+  try {
+    await database.upsert(PROFILE_CACHE_TABLE, [
+      {
+        uuid: normalizedUuid,
+        profileB64,
+        cachedAt: now,
+      },
+    ]);
+    debug(ctx, debugLog, '🧬 写入 profile 缓存: %s', normalizedUuid);
+  } catch {
+    if (debugLog) ctx.logger.warn('🧬 写入 profile 缓存失败');
+  }
+
+  return profileB64;
 }
 
 export function getSkinUrlByProfileB64(profileBase64: string): string | undefined {

@@ -1,6 +1,7 @@
 import path from 'node:path';
 import { Schema } from 'koishi';
 import { type RenderSizeKey } from './util';
+import { DEFAULT_KEYBOARD_ROWS, stringifyCompact } from './qq';
 
 export interface Config {
   enableRender: boolean;
@@ -13,13 +14,21 @@ export interface Config {
   skinview3dBundlePath: string;
   fontPath: string;
   defaultWallPath: string;
+  enableQQMarkdown: boolean;
+  enableQQMarkdownRenderInfo: boolean;
+  qqMarkdownKeyboardJson: string;
+  showRenderInfo: boolean;
+  enableUuidCache: boolean;
+  uuidCacheDays: number;
+  enableProfileCache: boolean;
+  profileCacheMinutes: number;
   debugLog: boolean;
 }
 
 export const DEFAULT_ASSETS = {
-  skinview3dBundlePath: path.resolve(__dirname, '../assets/vendor/skinview3d.bundle.js'),
-  fontPath: path.resolve(__dirname, '../assets/fonts/minecraft.woff2'),
-  defaultWallPath: path.resolve(__dirname, '../assets/image/default-wall.jpg'),
+  skinview3dBundlePath: path.resolve(process.cwd(), 'data/assets/mcrenderskin-vincentzyu-fork/vendor/skinview3d.bundle.js'),
+  fontPath: path.resolve(process.cwd(), 'data/assets/mcrenderskin-vincentzyu-fork/fonts/minecraft.woff2'),
+  defaultWallPath: path.resolve(process.cwd(), 'data/assets/mcrenderskin-vincentzyu-fork/image/default-wall.jpg'),
 };
 
 // 🧩 插件配置
@@ -43,7 +52,7 @@ export const Config: Schema<Config> = Schema.intersect([
     ])
       .default('360P')
       .description('📐 指定渲染分辨率，数值越高越耗时'),
-  }).description('常规设置'),
+  }).description('⚙️ 常规设置'),
 
   // 🌐 下载设置
   Schema.object({
@@ -54,7 +63,7 @@ export const Config: Schema<Config> = Schema.intersect([
     tryCapeBase64: Schema.boolean()
       .default(false)
       .description('🪁 尝试使用 Koishi 的 `ctx.http` 下载披风，而非走 Puppeteer'),
-  }).description('下载设置'),
+  }).description('🌐 下载设置'),
 
   // 🖼️ 背景图设置
   Schema.object({
@@ -69,8 +78,8 @@ export const Config: Schema<Config> = Schema.intersect([
       Schema.path().required().description('📁 Path'),
     ])
       .default('Default')
-      .description('🖼️ 渲染时使用的自定义背景图'),
-  }).description('背景图设置'),
+      .description('🖼️ 渲染时使用的自定义背景图<br>🌄 填写 <code>Default</code> 时使用默认背景图：<code>ctx.baseDir/data/assets/mcrenderskin-vincentzyu-fork/image/default-wall.jpg</code>'),
+  }).description('🖼️ 背景图设置'),
 
   // ⏱️ 运行控制
   Schema.object({
@@ -79,32 +88,80 @@ export const Config: Schema<Config> = Schema.intersect([
       .max(1e4)
       .default(5000)
       .description('⏱️ 渲染超时阈值，单位 ms'),
-  }).description('运行控制'),
+  }).description('⏱️ 运行控制'),
+
+  // 🗄️ 缓存设置
+  Schema.object({
+    enableUuidCache: Schema.boolean()
+      .default(true)
+      .description('🗄️ 是否启用玩家 UUID 数据库缓存，需要 database 服务'),
+
+    uuidCacheDays: Schema.number()
+      .min(1)
+      .max(365)
+      .default(30)
+      .description('📅 UUID 缓存有效期，单位：天'),
+
+    enableProfileCache: Schema.boolean()
+      .default(true)
+      .description('🧬 是否启用 Mojang profile 数据库缓存，需要 database 服务'),
+
+    profileCacheMinutes: Schema.number()
+      .min(1)
+      .max(10080)
+      .default(10)
+      .description('⏲️ Mojang profile 缓存有效期，单位：分钟'),
+  }).description('🗄️ 缓存设置'),
 
   // 📁 资源路径
   Schema.object({
     skinview3dBundlePath: Schema.string()
       .role('textarea', { rows: [2, 5] })
       .default(DEFAULT_ASSETS.skinview3dBundlePath)
-      .description('📦 skinview3d bundle 路径'),
+      .description('📦 skinview3d bundle 路径（默认展示 cwd/data/assets；运行时自动使用 ctx.baseDir/data/assets）'),
 
     fontPath: Schema.string()
       .role('textarea', { rows: [2, 5] })
       .default(DEFAULT_ASSETS.fontPath)
-      .description('🔤 Minecraft 字体路径'),
+      .description('🔤 Minecraft 字体路径（默认展示 cwd/data/assets；运行时自动使用 ctx.baseDir/data/assets）'),
 
     defaultWallPath: Schema.string()
       .role('textarea', { rows: [2, 5] })
       .default(DEFAULT_ASSETS.defaultWallPath)
-      .description('🌄 默认背景图路径'),
-  }).description('资源路径'),
+      .description('🌄 默认背景图路径（默认展示 cwd/data/assets；运行时自动使用 ctx.baseDir/data/assets）'),
+  }).description('📁 资源路径'),
+
+  // 🤖 QQ 官方 Bot 平台设置
+  Schema.object({
+    enableQQMarkdown: Schema.boolean()
+      .default(true)
+      .description('💬 在 QQ 官方 Bot 平台发送渲染图后附带 Markdown + 按钮消息'),
+
+    enableQQMarkdownRenderInfo: Schema.boolean()
+      .default(true)
+      .description('⏱️ 是否在 QQ Markdown 中展示网络请求、Puppeteer 渲染和总耗时'),
+
+    qqMarkdownKeyboardJson: Schema.string()
+      .role('textarea', { rows: [5, 10] })
+      .default(stringifyCompact(DEFAULT_KEYBOARD_ROWS))
+      .description(
+        '📋 QQ Markdown 按钮 JSON 配置<br><em>支持变量: <code>${playerName}</code> <code>${userId}</code></em>',
+      ),
+  }).description('🤖 QQ 官方 Bot 平台设置'),
+
+  // 📊 渲染信息
+  Schema.object({
+    showRenderInfo: Schema.boolean()
+      .default(true)
+      .description('⏱️ 是否在图片消息后追加网络请求、Puppeteer 渲染和总耗时信息'),
+  }).description('📊 渲染信息'),
 
   // 🔎 调试输出
   Schema.object({
     debugLog: Schema.boolean()
       .default(false)
       .description('🔎 开启详细调试日志，便于排查下载与渲染问题'),
-  }).description('调试输出'),
+  }).description('🔎 调试输出'),
 ]);
 
 // 🧭 相对路径补全
