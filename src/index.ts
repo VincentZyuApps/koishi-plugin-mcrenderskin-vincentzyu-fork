@@ -87,6 +87,10 @@ export function apply(ctx: Context, config: ConfigType) {
     if (!isValidMcName(playerName)) return '输入的玩家名称非法';
     if (debugLog) ctx.logger.info('🔎 开始渲染: %s', playerName);
 
+    const waitingHintMsgId: string | null = config.enableWaitingHint
+      ? (await session.send(`${config.enableQuote ? h.quote(session.messageId) : ''}🎨 正在渲染 Minecraft 皮肤，请稍候... ⏳`))[0]
+      : null;
+
     const networkStart = Date.now();
     const uuidName = await getUuidNameByNameWithCache(ctx, playerName, {
       enableUuidCache: config.enableUuidCache,
@@ -95,6 +99,7 @@ export function apply(ctx: Context, config: ConfigType) {
     });
     if (!uuidName) {
       ctx.logger.error('无法获取 %c 的UUID', playerName);
+      if (waitingHintMsgId) await session.bot.deleteMessage(session.channelId, waitingHintMsgId).catch(() => {});
       return `无法获取 ${playerName} 的 UUID`;
     }
 
@@ -107,11 +112,15 @@ export function apply(ctx: Context, config: ConfigType) {
     });
     if (!profileB64) {
       ctx.logger.error('无法获取 %c 的PROFILE', playerName);
+      if (waitingHintMsgId) await session.bot.deleteMessage(session.channelId, waitingHintMsgId).catch(() => {});
       return `无法获取 ${playerName} 的 PROFILE`;
     }
 
     let skin = getSkinUrlByProfileB64(profileB64);
-    if (!skin) return `无法获取 ${playerName} 的皮肤地址`;
+    if (!skin) {
+      if (waitingHintMsgId) await session.bot.deleteMessage(session.channelId, waitingHintMsgId).catch(() => {});
+      return `无法获取 ${playerName} 的皮肤地址`;
+    }
 
     let cape = getCapeUrlByTextureProf(profileB64);
     if (!cape) cape = await getOptiCapeByName(ctx, playerName, debugLog);
@@ -162,9 +171,11 @@ export function apply(ctx: Context, config: ConfigType) {
       const md = buildRenderMarkdown(playerName, timing);
       const kb = buildRenderKeyboard(playerName, session.userId, mcrCommandName, config.qqMarkdownKeyboardJson);
       await sendQQMarkdown(session, md, kb);
+      if (waitingHintMsgId) await session.bot.deleteMessage(session.channelId, waitingHintMsgId).catch(() => {});
       return;
     }
 
-    return message;
+    await session.send(message);
+    if (waitingHintMsgId) await session.bot.deleteMessage(session.channelId, waitingHintMsgId).catch(() => {});
   });
 }

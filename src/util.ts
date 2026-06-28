@@ -7,7 +7,7 @@ const SHARED_ASSET_ROOT_PARTS = ['data', 'assets', 'mcrenderskin-vincentzyu-fork
 
 export const SHARED_ASSET_FILES = {
   skinview3dBundlePath: ['vendor', 'skinview3d.bundle.js'],
-  fontPath: ['fonts', 'minecraft.woff2'],
+  fontPath: ['fonts', 'MinecraftAE.sub.ttf'],
   defaultWallPath: ['image', 'default-wall.jpg'],
 } as const;
 

@@ -12,7 +12,7 @@ function debug(ctx: Context | undefined, enabled: boolean | undefined, message: 
 }
 
 function loadFontData(fontPath: string): string {
-  return toDataUri('application/x-font-woff2;charset=utf-8', readBinaryAsset(fontPath));
+  return toDataUri('font/ttf;charset=utf-8', readBinaryAsset(fontPath));
 }
 
 function loadWallpaper(defaultWallPath: string): string {
@@ -37,10 +37,11 @@ export function getHtmlTemplate(wallpaper: string, fontDataUri: string, skinview
     <style>
       @font-face {
         font-family: 'Minecraft';
-        src: url('${fontDataUri}') format('woff2');
+        src: url('${fontDataUri}') format('truetype');
       }
       body {
         margin: 0;
+        font-family: 'Minecraft', sans-serif;
         background-image: url('${background}');
         background-repeat: no-repeat;
         background-size: cover;

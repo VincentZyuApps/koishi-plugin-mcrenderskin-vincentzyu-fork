@@ -7,6 +7,7 @@ export interface Config {
   enableRender: boolean;
   mcrCommandName: string;
   enableQuote: boolean;
+  enableWaitingHint: boolean;
   initName: string;
   renderSize: RenderSizeKey;
   trySkinBase64: boolean;
@@ -29,7 +30,7 @@ export interface Config {
 
 export const DEFAULT_ASSETS = {
   skinview3dBundlePath: path.resolve(process.cwd(), 'data/assets/mcrenderskin-vincentzyu-fork/vendor/skinview3d.bundle.js'),
-  fontPath: path.resolve(process.cwd(), 'data/assets/mcrenderskin-vincentzyu-fork/fonts/minecraft.woff2'),
+  fontPath: path.resolve(process.cwd(), 'data/assets/mcrenderskin-vincentzyu-fork/fonts/MinecraftAE.sub.ttf'),
   defaultWallPath: path.resolve(process.cwd(), 'data/assets/mcrenderskin-vincentzyu-fork/image/default-wall.jpg'),
 };
 
@@ -54,6 +55,10 @@ export const Config: Schema<Config> = Schema.intersect([
     enableQuote: Schema.boolean()
       .default(true)
       .description('💬 是否自动引用回复触发指令的消息'),
+
+    enableWaitingHint: Schema.boolean()
+      .default(true)
+      .description('⏳ 是否启用「正在渲染，请稍候...」等待提示消息'),
   }).description('💬 消息设置'),
 
   // 👤 玩家设置
