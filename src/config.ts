@@ -5,68 +5,47 @@ import { DEFAULT_KEYBOARD_ROWS, stringifyCompact } from './qq';
 
 export interface Config {
   // ===== 🎯 指令设置 =====
-  /** 🎯 Minecraft 皮肤渲染指令名 */
-  mcrCommandName: string;
+  mcrCommandName: string; // 🎯 Minecraft 皮肤渲染指令名
 
   // ===== 💬 消息设置 =====
-  /** 💬 是否自动引用回复触发指令的消息 */
-  enableQuote: boolean;
-  /** ⏳ 是否显示「渲染中，请等待...」提示 */
-  enableWaitingHint: boolean;
+  enableQuote: boolean; // 💬 是否自动引用回复触发指令的消息
+  enableWaitingHint: boolean; // ⏳ 是否显示「渲染中，请等待...」提示
 
   // ===== 👤 玩家设置 =====
-  /** 👤 渲染指令的默认玩家名称 */
-  initName: string;
-  /** 📐 渲染分辨率 */
-  renderSize: RenderSizeKey;
+  initName: string; // 👤 渲染指令的默认玩家名称
+  renderSize: RenderSizeKey; // 📐 渲染分辨率
 
   // ===== 🌐 下载设置 =====
-  /** 🌐 尝试使用 Koishi 的 ctx.http 下载皮肤，而非走 Puppeteer */
-  trySkinBase64: boolean;
-  /** 🪁 尝试使用 Koishi 的 ctx.http 下载披风，而非走 Puppeteer */
-  tryCapeBase64: boolean;
+  trySkinBase64: boolean; // 🌐 尝试使用 Koishi 的 ctx.http 下载皮肤，而非走 Puppeteer
+  tryCapeBase64: boolean; // 🪁 尝试使用 Koishi 的 ctx.http 下载披风，而非走 Puppeteer
 
   // ===== 🖼️ 背景图设置 =====
-  /** 🖼️ 自定义背景图 */
-  wallPaper: string;
+  wallPaper: string; // 🖼️ 自定义背景图
 
   // ===== ⏱️ 运行控制 =====
-  /** ⏱️ 渲染超时阈值 ms */
-  renderTimeOut: number;
+  renderTimeOut: number; // ⏱️ 渲染超时阈值 ms
 
   // ===== 📁 资源路径 =====
-  /** 📦 skinview3d bundle 路径 */
-  skinview3dBundlePath: string;
-  /** 🔤 Minecraft 字体路径 */
-  fontPath: string;
-  /** 🌄 默认背景图路径 */
-  defaultWallPath: string;
+  skinview3dBundlePath: string; // 📦 skinview3d bundle 路径
+  fontPath: string; // 🔤 Minecraft 字体路径
+  defaultWallPath: string; // 🌄 默认背景图路径
 
   // ===== 🤖 QQ 官方 Bot 平台设置 =====
-  /** 💬 是否启用 QQ Markdown 消息 */
-  enableQQMarkdown: boolean;
-  /** ⏱️ 是否在 QQ Markdown 中展示网络请求、渲染和总耗时 */
-  enableQQMarkdownRenderInfo: boolean;
-  /** 📋 QQ Markdown 按钮 JSON 配置 */
-  qqMarkdownKeyboardJson: string;
+  enableQQMarkdown: boolean; // 💬 是否启用 QQ Markdown 消息
+  enableQQMarkdownRenderInfo: boolean; // ⏱️ 是否在 QQ Markdown 中展示网络请求、渲染和总耗时
+  qqMarkdownKeyboardJson: string; // 📋 QQ Markdown 按钮 JSON 配置
 
   // ===== 📊 渲染信息 =====
-  /** 🖼️ 是否在图片消息后追加渲染耗时信息 */
-  showRenderInfo: boolean;
+  showRenderInfo: boolean; // 🖼️ 是否在图片消息后追加渲染耗时信息
 
   // ===== 🗄️ 缓存设置 =====
-  /** 🗄️ 是否启用 UUID 数据库缓存 */
-  enableUuidCache: boolean;
-  /** 📅 UUID 缓存有效期（天） */
-  uuidCacheDays: number;
-  /** 🧬 是否启用 Mojang profile 数据库缓存 */
-  enableProfileCache: boolean;
-  /** ⏲️ Mojang profile 缓存有效期（分钟） */
-  profileCacheMinutes: number;
+  enableUuidCache: boolean; // 🗄️ 是否启用 UUID 数据库缓存
+  uuidCacheDays: number; // 📅 UUID 缓存有效期（天）
+  enableProfileCache: boolean; // 🧬 是否启用 Mojang profile 数据库缓存
+  profileCacheMinutes: number; // ⏲️ Mojang profile 缓存有效期（分钟）
 
   // ===== 🔎 调试输出 =====
-  /** 🔎 开启详细调试日志 */
-  verboseConsoleLog: boolean;
+  verboseConsoleLog: boolean; // 🔎 开启详细调试日志
 }
 
 export const DEFAULT_ASSETS = {
