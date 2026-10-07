@@ -1,5 +1,3 @@
-import { h } from 'koishi';
-
 export const DEFAULT_KEYBOARD_ROWS = {
   rows: [
     {
@@ -106,19 +104,6 @@ export async function sendQQMarkdown(
 ): Promise<void> {
   if (!['qq', 'qqguild'].includes(session.platform)) return;
   try {
-    const isCrack = !!(session.bot as any)?.config?.autoStreamText;
-
-    if (isCrack) {
-      const payload: Record<string, unknown> = {
-        markdown: { content: markdown },
-      };
-      if ((keyboard as any)?.rows?.length) {
-        payload.keyboard = { content: keyboard };
-      }
-      await session.send(h('qq:rawmarkdown', payload));
-      return;
-    }
-
     const payload: Record<string, unknown> = {
       msg_type: 2,
       markdown: { content: markdown },
@@ -137,8 +122,14 @@ export async function sendQQMarkdown(
       payload.msg_seq = ++session.seq;
     }
 
-    await session.bot.internal.sendMessage(session.channelId, payload);
-  } catch (e) {
+    const isDirect = session.isDirect || session.channelId?.includes?.('_');
+    if (isDirect) {
+      const targetUserId = session.userId || session.channelId?.split?.('_')?.[0];
+      await session.bot.internal.sendPrivateMessage(targetUserId, payload);
+    } else {
+      await session.bot.internal.sendMessage(session.channelId, payload);
+    }
+  } catch (e: any) {
     console.warn('⚠️💬 [QQ Markdown] 发送失败, 不影响图片:', e?.message || e);
   }
 }
